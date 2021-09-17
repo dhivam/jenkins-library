@@ -4,60 +4,20 @@
 def call(Map param){
 	pipeline {
 		agent {
-            label "${param.agent}"
-        } 
+			label "dockerworker"
+		}
 		stages {
 			stage ("telegram notif"){
-				when {
-				expression { return "${param.agent}" == 'dockerworker'}
-				}
 				steps{
 					echo "${getMessage()} ${param.text}"
 				}
 			}
 			stage('Build') {
-				when {
-				expression { return "${param.agent}" == 'dockerworker'}
-				}
 				steps {
 					sh 'mvn -B -DskipTests clean package'
 				}
 			}
 			stage('Test') {
-				when {
-				expression { return "${param.agent}" == 'dockerworker'}
-				}
-				steps {
-					sh 'mvn test'
-				}
-				post {
-					always {
-						junit 'target/surefire-reports/*.xml'
-					}
-				}
-			}
-		}
-        stages {
-			stage ("telegram notif"){
-				when {
-				expression { return "${param.agent}" == 'worker2'}
-				}
-				steps{
-					echo "${getMessage()} ${param.text}"
-				}
-			}
-			stage('Build') {
-				when {
-				expression { return "${param.agent}" == 'worker2'}
-				}
-				steps {
-					sh 'mvn -B -DskipTests clean package'
-				}
-			}
-			stage('Test') {
-				when {
-				expression { return "${param.agent}" == 'worker2'}
-				}
 				steps {
 					sh 'mvn test'
 				}
