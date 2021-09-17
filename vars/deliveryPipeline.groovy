@@ -3,21 +3,28 @@
 
 def call(Map param){
 	pipeline {
-		agent {
-			label "dockerworker"
-		}
+		agent any 
 		stages {
 			stage ("telegram notif"){
+				agent {
+					label "dockerworker"
+				}
 				steps{
 					echo "${getMessage()} ${param.text}"
 				}
 			}
 			stage('Build') {
+				agent {
+					label "dockerworker"
+				}
 				steps {
 					sh 'mvn -B -DskipTests clean package'
 				}
 			}
 			stage('Test') {
+				agent {
+					label "dockerworker"
+				}
 				steps {
 					sh 'mvn test'
 				}
@@ -25,6 +32,14 @@ def call(Map param){
 					always {
 						junit 'target/surefire-reports/*.xml'
 					}
+				}
+			}
+			stage ("telegram notif"){
+				agent {
+					label "worker"
+				}
+				steps{
+					echo "${getMessage()} ${param.text}"
 				}
 			}
 		}
