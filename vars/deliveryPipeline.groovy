@@ -3,10 +3,10 @@
 
 def call(Map param){
 	pipeline {
-		agent any 
+		agent any
 		stages {
 			stage ("telegram notif"){
-				agent {
+                agent {
 					label "dockerworker"
 				}
 				steps{
@@ -14,7 +14,7 @@ def call(Map param){
 				}
 			}
 			stage('Build') {
-				agent {
+                agent {
 					label "dockerworker"
 				}
 				steps {
@@ -22,37 +22,8 @@ def call(Map param){
 				}
 			}
 			stage('Test') {
-				agent {
+                agent {
 					label "dockerworker"
-				}
-				steps {
-					sh 'mvn test'
-				}
-				post {
-					always {
-						junit 'target/surefire-reports/*.xml'
-					}
-				}
-			}
-			stage ("telegram notif"){
-				agent {
-					label "worker"
-				}
-				steps{
-					echo "${getMessage()} ${param.text}"
-				}
-			}
-			stage('Build') {
-				agent {
-					label "worker"
-				}
-				steps {
-					sh 'mvn -B -DskipTests clean package'
-				}
-			}
-			stage('Test') {
-				agent {
-					label "worker"
 				}
 				steps {
 					sh 'mvn test'
@@ -65,6 +36,37 @@ def call(Map param){
 			}
 		}
 
+		stages {
+			stage ("telegram notif"){
+                agent {
+					label "worker"
+				}
+				steps{
+					echo "${getMessage()} ${param.text}"
+				}
+			}
+			stage('Build') {
+                agent {
+					label "worker"
+				}
+				steps {
+					sh 'mvn -B -DskipTests clean package'
+				}
+			}
+			stage('Test') {
+                agent {
+					label "worker"
+				}
+				steps {
+					sh 'mvn test'
+				}
+				post {
+					always {
+						junit 'target/surefire-reports/*.xml'
+					}
+				}
+			}
+		}
     }
 }
 
