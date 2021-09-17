@@ -4,20 +4,21 @@
 def call(Map param){
 	pipeline {
 		agent {
-			label "dockerworker"
-		}
+            label "${param.agent}"
+        } 
 		stages {
-			stage ("telegram notif"){
-				steps{
-					echo "${getMessage()} ${param.text}"
-				}
-			}
 			stage('Build') {
+				when {
+				expression { return "${param.agent}" == 'dockerworker'}
+				}
 				steps {
 					sh 'mvn -B -DskipTests clean package'
 				}
 			}
 			stage('Test') {
+				when {
+				expression { return "${param.agent}" == 'dockerworker'}
+				}
 				steps {
 					sh 'mvn test'
 				}
@@ -27,13 +28,51 @@ def call(Map param){
 					}
 				}
 			}
-		}
+            stage('Build image') {
+            when {
+				expression { return "${param.agent}" == 'dockerworker'}
+				}
+                steps {
+                    sh 'docker build -t my-app .'
+                }
+            }
+            stage('Run app') {
+            when {
+				expression { return "${param.agent}" == 'dockerworker'}
+				}
+                steps {
+                    sh 'docker run -p 8383:8383 my-app'
+                }
+            }
+			stage('Build') {
+				when {
+				expression { return "${param.agent}" == 'worker2'}
+				}
+				steps {
+					sh 'mvn -B -DskipTests clean package'
+				}
+			}
+			stage('Test') {
+				when {
+				expression { return "${param.agent}" == 'worker2'}
+				}
+				steps {
+					sh 'mvn test'
+				}
+				post {
+					always {
+						junit 'target/surefire-reports/*.xml'
+					}
+				}
+			}
+			stage('Build') {
+				when {
+				expression { return "${param.agent}" == 'worker2'}
+				}
+				steps {
+					sh 'java -jar target/*.jar'
+				}
+			}
 
     }
-}
-
-def getMessage (){
-	def commiter = sh(script: "git show -s --pretty=%cn",returnStdout: true).trim()
-	def message = "$commiter deploying app"
-	return message
 }
