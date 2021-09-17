@@ -6,14 +6,12 @@ def call(Map param){
 			label "${param.agent}"
 		}
 		stages {
-			stage ("Build docker") {
-				when { expression { return "${param.agent}" == 'dockerworker'} }
+			stage ("Build ") {
 				steps {
 					sh 'mvn -B -DskipTests clean package'
 				}
 			}
-			stage ("Test docker") {
-				when { expression { return "${param.agent}" == 'dockerworker'} }
+			stage ("Test") {
 				steps {
 					sh 'mvn test'
 				}
@@ -33,23 +31,6 @@ def call(Map param){
 				when { expression { return "${param.agent}" == 'dockerworker'} }
 				steps {
 					sh 'docker run -p 8383:8383 my-app'
-				}
-			}
-			stage('Build app') {
-				when { expression { return "${param.agent}" == 'worker2'} }
-				steps {
-					sh 'mvn -B -DskipTests clean package'
-				}
-			}
-			stage('Test app') {
-				when { expression { return "${param.agent}" == 'worker2'} }
-				steps {
-					sh 'mvn test'
-				}
-				post {
-					always {
-						junit 'target/surefire-reports/*.xml'
-					}
 				}
 			}
 			stage('Run app') {
