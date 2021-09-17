@@ -40,7 +40,7 @@ def call(Map param){
         stages {
 			stage ("telegram notif"){
 				when {
-				expression { return "${param.agent}" == 'dockerworker'}
+				expression { return "${param.agent}" == 'worker2'}
 				}
 				steps{
 					echo "${getMessage()} ${param.text}"
@@ -48,7 +48,7 @@ def call(Map param){
 			}
 			stage('Build') {
 				when {
-				expression { return "${param.agent}" == 'dockerworker'}
+				expression { return "${param.agent}" == 'worker2'}
 				}
 				steps {
 					sh 'mvn -B -DskipTests clean package'
@@ -56,7 +56,7 @@ def call(Map param){
 			}
 			stage('Test') {
 				when {
-				expression { return "${param.agent}" == 'dockerworker'}
+				expression { return "${param.agent}" == 'worker2'}
 				}
 				steps {
 					sh 'mvn test'
