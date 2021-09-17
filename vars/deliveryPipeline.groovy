@@ -42,6 +42,27 @@ def call(Map param){
 					echo "${getMessage()} ${param.text}"
 				}
 			}
+			stage('Build') {
+				agent {
+					label "worker"
+				}
+				steps {
+					sh 'mvn -B -DskipTests clean package'
+				}
+			}
+			stage('Test') {
+				agent {
+					label "worker"
+				}
+				steps {
+					sh 'mvn test'
+				}
+				post {
+					always {
+						junit 'target/surefire-reports/*.xml'
+					}
+				}
+			}
 		}
 
     }
