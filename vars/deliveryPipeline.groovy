@@ -3,21 +3,17 @@
 def call(Map param){
 	pipeline {
 		agent {
-            label "${param.agent}"
-        } 
+			label "${param.agentName}"
+		}
 		stages {
-			stage('Build') {
-				when {
-				expression { return "${param.agent}" == 'dockerworker'}
-				}
+			stage ("Build") {
+				when { expression { return "${param.agentName}" == 'dockerworker'} }
 				steps {
 					sh 'mvn -B -DskipTests clean package'
 				}
 			}
-			stage('Test') {
-				when {
-				expression { return "${param.agent}" == 'dockerworker'}
-				}
+			stage ("Test") {
+				when { expression { return "${param.agentName}" == 'dockerworker'} }
 				steps {
 					sh 'mvn test'
 				}
@@ -27,34 +23,26 @@ def call(Map param){
 					}
 				}
 			}
-            stage('Build image') {
-            when {
-				expression { return "${param.agent}" == 'dockerworker'}
+			stage('Build image') {
+				when { expression { return "${param.agentName}" == 'dockerworker'} }
+				steps {
+					sh 'docker build -t my-app .'
 				}
-                steps {
-                    sh 'docker build -t my-app .'
-                }
-            }
-            stage('Run app') {
-            when {
-				expression { return "${param.agent}" == 'dockerworker'}
+			}
+			stage('Run app') {
+				when { expression { return "${param.agentName}" == 'dockerworker'} }
+				steps {
+					sh 'docker run -p 8383:8383 my-app'
 				}
-                steps {
-                    sh 'docker run -p 8383:8383 my-app'
-                }
-            }
-			stage('Build') {
-				when {
-				expression { return "${param.agent}" == 'worker2'}
-				}
+			}
+			stage('Build app') {
+				when { expression { return "${param.agentName}" == 'dockerworker'} }
 				steps {
 					sh 'mvn -B -DskipTests clean package'
 				}
 			}
 			stage('Test') {
-				when {
-				expression { return "${param.agent}" == 'worker2'}
-				}
+				when { expression { return "${param.agentName}" == 'dockerworker'} }
 				steps {
 					sh 'mvn test'
 				}
@@ -64,14 +52,18 @@ def call(Map param){
 					}
 				}
 			}
-			stage('Build') {
-				when {
-				expression { return "${param.agent}" == 'worker2'}
-				}
+			stage('Run app') {
+				when { expression { return "${param.agentName}" == 'dockerworker'} }
 				steps {
 					sh 'java -jar target/*.jar'
 				}
 			}
 
+		}
+		post {
+			always {
+				deleteDir()
+			}
+    	}
     }
 }
