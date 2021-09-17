@@ -3,9 +3,7 @@
 
 def call(Map param){
 	pipeline {
-		agent {
-            label "${param.agent}"
-        } 
+		agent { label "${param.agent}" } 
 		stages {
 			stage('Build') {
 				when {
